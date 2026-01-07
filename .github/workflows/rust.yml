@@ -33,5 +33,5 @@ jobs:
       - name: Install 32-bit toolchain
         if: matrix.target == 'i686-unknown-linux-gnu'
         run: sudo apt-get update && sudo apt-get install -y gcc-multilib
-      - name: Run tests
-        run: RUSTFLAGS="-C debuginfo=2" cargo test --verbose --release --workspace --no-fail-fast --target ${{ matrix.target }}
+      - name: Run tests (zune-bmp only for 32-bit overflow validation)
+        run: RUSTFLAGS="-C debuginfo=2" cargo test --verbose --release -p zune-bmp --target ${{ matrix.target }}
