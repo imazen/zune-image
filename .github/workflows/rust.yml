@@ -17,12 +17,21 @@ jobs:
           - name: Linux
             os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+          # 32-bit target to catch integer overflow issues
+          - name: Linux-32bit
+            os: ubuntu-latest
+            target: i686-unknown-linux-gnu
 
     runs-on: ${{ matrix.os }}
 
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      # Install 32-bit libraries for cross-compilation
+      - name: Install 32-bit toolchain
+        if: matrix.target == 'i686-unknown-linux-gnu'
+        run: sudo apt-get update && sudo apt-get install -y gcc-multilib
       - name: Run tests
-        run: RUSTFLAGS="-C debuginfo=2"  cargo test --verbose --release --workspace --no-fail-fast
+        run: RUSTFLAGS="-C debuginfo=2" cargo test --verbose --release --workspace --no-fail-fast --target ${{ matrix.target }}
