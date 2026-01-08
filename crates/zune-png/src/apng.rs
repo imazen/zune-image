@@ -163,10 +163,10 @@ impl SingleFrame {
 ///
 /// # Examples
 ///
-/// ```no_run
+/// ```ignore
 /// use zune_core::bytestream::ZCursor;
 /// use zune_core::options::EncoderOptions;
-/// use zune_png::{PngDecoder, post_process_image};
+/// use zune_png::{PngDecoder, PngEncoder, post_process_image};
 /// // read the file
 /// // set up decoder
 /// let mut decoder = PngDecoder::new(ZCursor::new(&[]));

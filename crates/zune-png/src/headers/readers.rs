@@ -4,11 +4,33 @@
  * This software is free software; You can redistribute it or modify it under terms of the MIT, Apache License or Zlib license
  */
 
-use alloc::{format, vec};
+use alloc::{format, vec, vec::Vec};
 
 use zune_core::bytestream::ZByteReaderTrait;
 use zune_core::log::{trace, warn};
+#[cfg(feature = "zune-inflate-backend")]
 use zune_inflate::DeflateDecoder;
+
+/// Decompress zlib data using the available backend.
+#[inline]
+fn decompress_zlib(data: &[u8]) -> Result<Vec<u8>, ()> {
+    #[cfg(feature = "fdeflate")]
+    {
+        // Use a reasonable limit for metadata chunks (16MB should be plenty)
+        fdeflate::decompress_to_vec_bounded(data, 16 * 1024 * 1024).map_err(|_| ())
+    }
+
+    #[cfg(all(feature = "zune-inflate-backend", not(feature = "fdeflate")))]
+    {
+        DeflateDecoder::new(data).decode_zlib().map_err(|_| ())
+    }
+
+    #[cfg(not(any(feature = "fdeflate", feature = "zune-inflate-backend")))]
+    {
+        let _ = data;
+        Err(())
+    }
+}
 
 use crate::apng::{ActlChunk, BlendOp, DisposeOp, FrameInfo, SingleFrame};
 use crate::decoder::{ItxtChunk, PLTEEntry, PngChunk, TextChunk, TimeInfo, ZtxtChunk};
@@ -341,7 +363,7 @@ impl<T: ZByteReaderTrait> PngDecoder<T> {
             let data = self.stream.peek_at(0, remainder).unwrap();
 
             // decode to vec
-            if let Ok(icc_uncompressed) = DeflateDecoder::new(data).decode_zlib() {
+            if let Ok(icc_uncompressed) = decompress_zlib(data) {
                 self.png_info.icc_profile = Some(icc_uncompressed);
             } else {
                 warn!("Could not decode ICC profile, error with zlib stream");
@@ -447,7 +469,7 @@ impl<T: ZByteReaderTrait> PngDecoder<T> {
             let data = self.stream.peek_at(0, remainder).unwrap();
 
             // decode to vec
-            if let Ok(ztxt) = DeflateDecoder::new(data).decode_zlib() {
+            if let Ok(ztxt) = decompress_zlib(data) {
                 let chunk = ZtxtChunk {
                     keyword,
                     text: ztxt

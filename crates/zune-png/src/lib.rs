@@ -169,6 +169,7 @@ extern crate core;
 pub use apng::post_process_image;
 pub use apng::{BlendOp, DisposeOp};
 pub use decoder::{ItxtChunk, PngDecoder, PngInfo, TextChunk, TimeInfo, ZtxtChunk};
+#[cfg(feature = "zune-inflate-backend")]
 pub use encoder::PngEncoder;
 pub use enums::InterlaceMethod;
 pub use zune_core;
