@@ -5,4 +5,5 @@
  */
 
 mod readers;
+#[cfg(feature = "zune-inflate-backend")]
 pub(crate) mod writers;

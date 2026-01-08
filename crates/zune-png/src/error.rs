@@ -23,6 +23,7 @@ pub enum PngDecodeErrors {
     /// Calculated CRC does not match expected crc
     BadCrc(u32, u32),
     /// error decoding zlib stream
+    #[cfg(feature = "zune-inflate-backend")]
     ZlibDecodeErrors(zune_inflate::errors::InflateDecodeErrors),
     /// Palette is empty yet was expected
     EmptyPalette,
@@ -52,6 +53,7 @@ impl Debug for PngDecodeErrors {
                 f,
                 "CRC does not match, expected {expected} but found {found}",
             ),
+            #[cfg(feature = "zune-inflate-backend")]
             Self::ZlibDecodeErrors(err) => {
                 writeln!(f, "Error decoding idat chunks {err:?}")
             }
@@ -83,6 +85,7 @@ impl From<String> for PngDecodeErrors {
     }
 }
 
+#[cfg(feature = "zune-inflate-backend")]
 impl From<zune_inflate::errors::InflateDecodeErrors> for PngDecodeErrors {
     fn from(val: zune_inflate::errors::InflateDecodeErrors) -> Self {
         Self::ZlibDecodeErrors(val)

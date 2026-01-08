@@ -14,6 +14,7 @@ use zune_core::colorspace::ColorSpace;
 use zune_core::log::{trace, warn};
 use zune_core::options::DecoderOptions;
 use zune_core::result::DecodingResult;
+#[cfg(feature = "zune-inflate-backend")]
 use zune_inflate::DeflateOptions;
 
 use crate::apng::{ActlChunk, FrameInfo, SingleFrame};
@@ -1296,15 +1297,31 @@ impl<T: ZByteReaderTrait> PngDecoder<T> {
             * depth_scale
             * usize::from(self.png_info.color.num_components());
 
-        let option = DeflateOptions::default()
-            .set_size_hint(size_hint)
-            .set_limit(size_hint + 4 * (self.png_info.height))
-            .set_confirm_checksum(self.options.inflate_get_confirm_adler());
+        #[cfg(feature = "fdeflate")]
+        {
+            let limit = size_hint + 4 * self.png_info.height;
+            fdeflate::decompress_to_vec_bounded(&flat_data.fdat, limit)
+                .map_err(|_| PngDecodeErrors::GenericStatic("fdeflate decompression error"))
+        }
 
-        let mut decoder = zune_inflate::DeflateDecoder::new_with_options(&flat_data.fdat, option);
+        #[cfg(all(feature = "zune-inflate-backend", not(feature = "fdeflate")))]
+        {
+            let option = DeflateOptions::default()
+                .set_size_hint(size_hint)
+                .set_limit(size_hint + 4 * (self.png_info.height))
+                .set_confirm_checksum(self.options.inflate_get_confirm_adler());
 
-        decoder
-            .decode_zlib()
-            .map_err(PngDecodeErrors::ZlibDecodeErrors)
+            let mut decoder =
+                zune_inflate::DeflateDecoder::new_with_options(&flat_data.fdat, option);
+
+            decoder
+                .decode_zlib()
+                .map_err(PngDecodeErrors::ZlibDecodeErrors)
+        }
+
+        #[cfg(not(any(feature = "fdeflate", feature = "zune-inflate-backend")))]
+        {
+            compile_error!("Either 'fdeflate' or 'zune-inflate-backend' feature must be enabled")
+        }
     }
 }

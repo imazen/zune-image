@@ -12,6 +12,7 @@
 use crate::enums::FilterMethod;
 
 pub mod de_filter;
+pub mod fast;
 mod filter;
 mod portable_simd;
 mod sse4;

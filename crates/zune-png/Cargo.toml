@@ -19,11 +19,16 @@ sse = []
 std = ["zune-core/std"]
 log = ["zune-core/log"]
 portable-simd = []
-default = ["sse", "std"]
+fdeflate = ["dep:fdeflate"]
+zune-inflate-backend = ["dep:zune-inflate"]
+# fdeflate for fast decoding, zune-inflate-backend for encoding
+default = ["sse", "std", "fdeflate", "zune-inflate-backend"]
 
 [dependencies]
 zune-core = { path = "../zune-core", version = "^0.5.0-rc0" }
-zune-inflate = { path = "../zune-inflate", version = "0.2", default-features = false, features = ["zlib"] }
+zune-inflate = { path = "../zune-inflate", version = "0.2", default-features = false, features = ["zlib"], optional = true }
+fdeflate = { version = "0.3", optional = true }
+multiversion = "0.7"
 
 [dev-dependencies]
 nanorand = { version = "0.7.0", default-features = false, features = ["wyrand"] } # testing purposes.
