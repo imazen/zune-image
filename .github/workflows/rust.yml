@@ -33,4 +33,7 @@ jobs:
         if: matrix.target == 'i686-unknown-linux-gnu'
         run: sudo apt-get update && sudo apt-get install -y gcc-multilib
       - name: Run tests
-        run: RUSTFLAGS="-C debuginfo=2" cargo test --verbose --release --workspace --no-fail-fast --target ${{ matrix.target }}
+        run: |
+          RUSTFLAGS="-C debuginfo=2" cargo test --verbose --release --workspace --no-fail-fast \
+            --exclude zune-benches \
+            --target ${{ matrix.target }}
