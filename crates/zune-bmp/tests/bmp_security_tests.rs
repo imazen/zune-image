@@ -111,17 +111,12 @@ fn test_rle_allocation_overflow_custom_limits() {
     assert!(result.is_err(), "Should fail for enormous dimensions");
 }
 
-/// Test: ICC profile size unbounded
+/// Test: ICC profile size limit
 ///
-/// VULNERABILITY: `/home/lilith/work/zune-image/crates/zune-bmp/src/decoder.rs:409-412`
-/// The decoder reads `profile_size` from the file without validating it's reasonable,
-/// potentially allocating gigabytes of memory.
-///
-/// This test crafts a BMP v5 header claiming a huge ICC profile.
-/// NOTE: Ignored because it panics on 32-bit (documents a separate vulnerability)
+/// The decoder limits ICC profile size to 10MB to prevent OOM attacks.
+/// A malicious BMP claiming a 2GB ICC profile should be rejected with an error.
 #[test]
-#[ignore = "Documents ICC profile OOM issue - panics on 32-bit, separate fix needed"]
-fn test_icc_profile_oom() {
+fn test_icc_profile_size_limit() {
     // BMP v5 header (124 bytes)
     let mut data = Vec::new();
 
@@ -181,12 +176,9 @@ fn test_icc_profile_oom() {
     let cursor = ZCursor::new(&data);
     let mut decoder = BmpDecoder::new(cursor);
 
-    // This should NOT attempt to allocate 2GB
-    // Currently it may try to peek_at() 2GB which could OOM
+    // Should reject with "ICC profile too large" error, not panic or OOM
     let result = decoder.decode();
-
-    // Document current behavior - should ideally fail fast without OOM
-    println!("ICC OOM test result: {:?}", result.is_ok());
+    assert!(result.is_err(), "Should reject oversized ICC profile");
 }
 
 /// Test: Malformed RLE data causing out-of-bounds access

@@ -406,6 +406,14 @@ where
                         // but that's okay, as I prefer it here to confirm to the notion
                         // that all headers are decoded after calling decode_header()
 
+                        // Limit ICC profile size to prevent OOM from malicious files
+                        const MAX_ICC_PROFILE_SIZE: usize = 10 * 1024 * 1024; // 10MB
+                        if profile_size as usize > MAX_ICC_PROFILE_SIZE {
+                            return Err(BmpDecoderErrors::GenericStatic(
+                                "ICC profile too large"
+                            ));
+                        }
+
                         let icc_bytes = self.bytes.peek_at(
                             (true_position.saturating_sub(current_pos)) as usize,
                             profile_size as usize
