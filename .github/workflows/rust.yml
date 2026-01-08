@@ -27,7 +27,6 @@ jobs:
             os: ubuntu-latest
             target: i686-unknown-linux-gnu
             packages: gcc-multilib
-            test-bmp-only: true
 
           # macOS
           - name: macOS x86_64
@@ -57,17 +56,9 @@ jobs:
         if: matrix.packages
         run: sudo apt-get update && sudo apt-get install -y ${{ matrix.packages }}
 
-      - name: Run tests (full workspace)
-        if: ${{ !matrix.test-bmp-only }}
+      - name: Run tests
         shell: bash
         run: |
           cargo test --verbose --release --workspace --no-fail-fast \
             --exclude zune-benches \
-            --target ${{ matrix.target }}
-
-      - name: Run tests (zune-bmp only for 32-bit overflow validation)
-        if: matrix.test-bmp-only
-        shell: bash
-        run: |
-          cargo test --verbose --release -p zune-bmp \
             --target ${{ matrix.target }}

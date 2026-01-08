@@ -27,4 +27,7 @@ zune-inflate = { path = "../zune-inflate", version = "0.2", default-features = f
 [dev-dependencies]
 nanorand = { version = "0.7.0", default-features = false, features = ["wyrand"] } # testing purposes.
 png = "0.17.8-rc"
+
+# spng-sys doesn't compile on 32-bit (AVX-512 BF16 intrinsics)
+[target.'cfg(target_pointer_width = "64")'.dev-dependencies]
 spng = "0.1.0"
